@@ -5,8 +5,10 @@ import { toast } from "react-toastify";
 const newsletterUrl = "https://www.course-api.com/cocktails-newsletter";
 
 export const action = async ({ request }) => {
+  // Change button text
   const formData = await request.formData();
   const data = Object.fromEntries(formData);
+
   try {
     const response = await axios.post(newsletterUrl, data);
     toast.success(response.data.msg);
@@ -21,6 +23,7 @@ export const action = async ({ request }) => {
 export default function Newsletter() {
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting'
+
   return (
     <Form className="form" method="POST">
       <h4 style={{ textAlign: "center", marginBottom: "2rem" }}>

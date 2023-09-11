@@ -1,22 +1,36 @@
 import { useLoaderData, Link, Navigate } from "react-router-dom";
 import axios from "axios";
 import Wrapper from "../assets/wrappers/CocktailPage";
-
 const singleCocktailUrl =
   "https://www.thecocktaildb.com/api/json/v1/1/lookup.php?i=";
+import { useQuery } from "@tanstack/react-query";
 
-  export const loader = async ({ params }) => {
-  const { id } = params;
-  const { data } = await axios.get(`${singleCocktailUrl}${id}`);
-  return { id, data };
+const singleCocktailQuery = (id) => {
+  return {
+    queryKey: ["cocktail", id],
+    queryFn: async () => {
+      const { data } = await axios.get(`${singleCocktailUrl}${id}`);
+      return data;
+    },
+  };
 };
-export default function Cocktail() {
-  const { id, data } = useLoaderData();
 
-  if(!data) return <Navigate to ='/' />;
+export const loader =
+  (queryClient) =>
+  async ({ params }) => {
+    const { id } = params;
+    await queryClient.ensureQueryData(singleCocktailQuery(id));
+    return { id };
+  };
+
+const Cocktail = () => {
+  const { id } = useLoaderData();
+
+  const { data } = useQuery(singleCocktailQuery(id));
+  if (!data) return <Navigate to="/" />;
 
   const singleDrink = data.drinks[0];
-  // console.log(singleDrink);
+
   const {
     strDrink: name,
     strDrinkThumb: image,
@@ -31,7 +45,6 @@ export default function Cocktail() {
       (key) => key.startsWith("strIngredient") && singleDrink[key] !== null
     )
     .map((key) => singleDrink[key]);
-  // console.log(validIngredients);
 
   return (
     <Wrapper>
@@ -62,13 +75,14 @@ export default function Cocktail() {
           </p>
           <p>
             <span className="drink-data">ingredients :</span>
-            {validIngredients.map((item, index)=>{
-              return <span className="ing" key={item}>
-                {item} {index < validIngredients.length - 1 ? ',': '' }
-              </span>
-            })
-
-            }
+            {validIngredients.map((item, index) => {
+              return (
+                <span className="ing" key={item}>
+                  {item}
+                  {index < validIngredients.length - 1 ? "," : ""}
+                </span>
+              );
+            })}
           </p>
           <p>
             <span className="drink-data">instructions :</span>
@@ -78,4 +92,5 @@ export default function Cocktail() {
       </div>
     </Wrapper>
   );
-}
+};
+export default Cocktail;
